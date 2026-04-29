@@ -34,6 +34,16 @@ public static class ReviewEndpoints
             return operation;
         });
 
+        // Compatibility endpoint for clients that request reviews under listings.
+        app.MapGet("/api/listings/{listingId:int}/reviews", async (int listingId, IReviewRepository repository) =>
+        {
+            var reviews = await repository.GetByListingIdAsync(listingId);
+            return Results.Ok(reviews);
+        })
+        .WithName("GetListingReviews")
+        .WithDescription("Gets all reviews for a specific listing")
+        .WithOpenApi();
+
         // GET review by id
         group.MapGet("/{id:int}", async (int id, IReviewRepository repository) =>
         {
@@ -54,6 +64,22 @@ public static class ReviewEndpoints
         })
         .WithName("CreateReview")
         .WithDescription("Creates a new review")
+        .WithOpenApi();
+
+        // Compatibility endpoint for clients that post to /api/reviews/by-listing/{id}.
+        group.MapPost("/by-listing/{listingId:int}", async (int listingId, Review review, IReviewRepository repository, IConfiguration config) =>
+        {
+            if (!config.GetValue<bool>("ENABLE_CRUD", true))
+            {
+                throw new InvalidOperationException("CRUD operations are currently disabled");
+            }
+
+            review.ListingId = listingId;
+            var newReview = await repository.CreateAsync(review);
+            return Results.Created($"/api/reviews/{newReview.Id}", newReview);
+        })
+        .WithName("CreateReviewByListing")
+        .WithDescription("Creates a new review for a specific listing")
         .WithOpenApi();
 
         // PUT update review

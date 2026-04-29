@@ -47,6 +47,15 @@ var app = builder.Build();
 
 app.MapDefaultEndpoints();
 
+// API landing endpoints so direct container app URL access doesn't return 404.
+app.MapGet("/", () => Results.Ok(new
+{
+    Service = "Octopets API",
+    Status = "Healthy",
+    Endpoints = new[] { "/health", "/api/listings", "/api/reviews" }
+}));
+app.MapGet("/api", () => Results.Redirect("/"));
+
 // Configure the HTTP request pipeline
 // Always enable OpenAPI in Azure (conditionally)
 if (app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("EnableSwagger", false))

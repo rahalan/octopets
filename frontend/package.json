@@ -30,6 +30,9 @@
       "react-app/jest"
     ]
   },
+  "overrides": {
+    "find-up": "5.0.0"
+  },
   "devDependencies": {
     "@playwright/test": "^1.52.0",
     "@types/node": "^22.15.17",
